@@ -11,6 +11,26 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Optional root route to handle "Cannot GET /"
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the Library Management System API',
+    endpoints: [
+      '/genres', '/genres/:id',
+      '/authors', '/authors/:id',
+      '/publishers', '/publishers/:id',
+      '/categories', '/categories/:id',
+      '/books', '/books/:id',
+      '/members', '/members/:id',
+      '/loans', '/loans/:id',
+      '/fines', '/fines/:id',
+      '/reservations', '/reservations/:id',
+      '/librarystaff', '/librarystaff/:id',
+      '/reports/recent-loans'
+    ]
+  });
+});
+
 // Helper function for GET endpoints
 const createGetEndpoints = (tableName, idColumn) => {
   app.get(`/${tableName.toLowerCase()}`, async (req, res) => {
