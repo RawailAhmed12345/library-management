@@ -5,32 +5,28 @@ const { Pool } = require('pg');
 const app = express();
 app.use(express.json());
 
-// Initialize PostgreSQL connection to Neon DB
+// Neon DB connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// Helper function to create GET endpoints for a table
-const createGetEndpoints = (authors, idColumn) => {
-  // GET all records
-  app.get(`/${authors.toLowerCase()}`, async (req, res) => {
+// Helper function for GET endpoints
+const createGetEndpoints = (tableName, idColumn) => {
+  app.get(`/${tableName.toLowerCase()}`, async (req, res) => {
     try {
-      const result = await pool.query(`SELECT * FROM ${authors}`);
+      const result = await pool.query(`SELECT * FROM ${tableName}`);
       res.json(result.rows);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   });
 
-  // GET record by ID
-  app.get(`/${authors.toLowerCase()}/:id`, async (req, res) => {
+  app.get(`/${tableName.toLowerCase()}/:id`, async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await pool.query(`SELECT * FROM ${authors} WHERE ${idColumn} = $1`, [id]);
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: `${authors} not found` });
-      }
+      const result = await pool.query(`SELECT * FROM ${tableName} WHERE ${idColumn} = $1`, [id]);
+      if (result.rows.length === 0) return res.status(404).json({ error: `${tableName} not found` });
       res.json(result.rows[0]);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -38,7 +34,7 @@ const createGetEndpoints = (authors, idColumn) => {
   });
 };
 
-// Create GET endpoints for all tables
+// Create endpoints for all tables
 createGetEndpoints('Genres', 'GenreID');
 createGetEndpoints('Authors', 'AuthorID');
 createGetEndpoints('Publishers', 'PublisherID');
@@ -50,7 +46,7 @@ createGetEndpoints('Fines', 'FineID');
 createGetEndpoints('Reservations', 'ReservationID');
 createGetEndpoints('LibraryStaff', 'StaffID');
 
-// Report endpoint for recent loans
+// Report endpoint
 app.get('/reports/recent-loans', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -66,6 +62,6 @@ app.get('/reports/recent-loans', async (req, res) => {
   }
 });
 
-// Start the server
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
