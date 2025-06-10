@@ -1,0 +1,12 @@
+{
+  "name": "Library Management",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/postgres:1": {
+      "postgresVersion": "15",
+      "installPostgres": "true"
+    }
+  }
+}
