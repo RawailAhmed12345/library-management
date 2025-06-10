@@ -13,6 +13,7 @@ const pool = new Pool({
 
 // Optional root route
 app.get('/', (req, res) => {
+  res.set('Content-Type', 'application/json');
   res.json({
     message: 'Welcome to the Library Management System API',
     endpoints: [
