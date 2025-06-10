@@ -81,6 +81,18 @@ app.get('/reports/recent-loans', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// After pool definition
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Database connection error:', err.message);
+  } else {
+    console.log('Database connected successfully');
+  }
+  release();
+});
+
+// In each GET handler's try block
+console.log(`Handling request for ${req.path}`);
 const cors = require('cors');
 app.use(cors());
 // Start server
