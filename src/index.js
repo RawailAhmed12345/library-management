@@ -11,8 +11,19 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Test database connection
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Database connection error:', err.message);
+  } else {
+    console.log('Database connected successfully');
+  }
+  release();
+});
+
 // Optional root route
 app.get('/', (req, res) => {
+  console.log('Handling request for', req.path);
   res.set('Content-Type', 'application/json');
   res.json({
     message: 'Welcome to the Library Management System API',
@@ -34,19 +45,21 @@ app.get('/', (req, res) => {
 
 // Helper function for GET endpoints
 const createGetEndpoints = (tableName, idColumn) => {
-  app.get(`/${tableName.toLowerCase()}`, async (req, res) => {
+  app.get(`/${tableName.toLowerCase()}`, (req, res) => {
+    console.log('Handling request for', req.path);
     try {
-      const result = await pool.query(`SELECT * FROM ${tableName}`);
+      const result = pool.query(`SELECT * FROM ${tableName}`);
       res.json(result.rows);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   });
 
-  app.get(`/${tableName.toLowerCase()}/:id`, async (req, res) => {
+  app.get(`/${tableName.toLowerCase()}/:id`, (req, res) => {
+    console.log('Handling request for', req.path);
     try {
       const { id } = req.params;
-      const result = await pool.query(`SELECT * FROM ${tableName} WHERE ${idColumn} = $1`, [id]);
+      const result = pool.query(`SELECT * FROM ${tableName} WHERE ${idColumn} = $1`, [id]);
       if (result.rows.length === 0) return res.status(404).json({ error: `${tableName} not found` });
       res.json(result.rows[0]);
     } catch (err) {
@@ -68,9 +81,10 @@ createGetEndpoints('Reservations', 'ReservationID');
 createGetEndpoints('LibraryStaff', 'StaffID');
 
 // Report endpoint
-app.get('/reports/recent-loans', async (req, res) => {
+app.get('/reports/recent-loans', (req, res) => {
+  console.log('Handling request for', req.path);
   try {
-    const result = await pool.query(`
+    const result = pool.query(`
       SELECT b.Title, m.Name, l.IssueDate
       FROM Books b
       JOIN Loans l ON b.BookID = l.BookID
@@ -82,20 +96,17 @@ app.get('/reports/recent-loans', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// After pool definition
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error('Database connection error:', err.message);
-  } else {
-    console.log('Database connected successfully');
-  }
-  release();
+
+// Error handling
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// In each GET handler's try block
-console.log(`Handling request for ${req.path}`);
-const cors = require('cors');
-app.use(cors());
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
