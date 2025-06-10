@@ -11,7 +11,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Optional root route to handle "Cannot GET /"
+// Optional root route
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to the Library Management System API',
